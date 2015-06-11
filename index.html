@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Socket.IO chat</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font: 13px Helvetica, Arial;
+    }
+
+    form {
+      background: #000;
+      padding: 3px;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+    }
+
+    form input#m {
+      border: 0;
+      padding: 10px;
+      width: 90%;
+      margin-right: .5%;
+    }
+
+    form input#m:-moz-read-only {
+      background-color: lightgrey;
+    }
+
+    form input#m:read-only {
+      background-color: lightgrey;
+    }
+
+    form input#nickname {
+      position: fixed;
+      top: 20px;
+      right: 50px;
+      border: 3px solid #000;
+      padding: 10px;
+    }
+
+    form input#nickname:invalid {
+      background-color: lightpink;
+    }
+
+    form input#nickname:invalid::-moz-placeholder {
+      color: darkslategray;
+    }
+
+    form input#nickname:invalid::-webkit-input-placeholder {
+      color: darkslategray;
+    }
+
+    form button {
+      width: 9%;
+      background: rgb(130, 224, 255);
+      border: none;
+      padding: 10px;
+    }
+
+    div#is-typing {
+      bottom: 41px;
+      left: 0;
+      position: fixed;
+      background-color: lightgoldenrodyellow;
+      color: gray;
+      padding: 5px 15px;
+    }
+
+    #messages {
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    #messages li {
+      padding: 5px 10px;
+    }
+
+    #messages li.server-message {
+      color: grey;
+    }
+
+    #messages li:nth-child(odd) {
+      background: #eeeeee;
+    }
+  </style>
+</head>
+<body>
+<ul id="messages"></ul>
+<!-- /#messages -->
+<div id="is-typing"
+     style="display: none;"></div>
+<!-- /.is-typing -->
+<form action="">
+  <input type="text"
+         id="nickname"
+         placeholder="Nickname"
+         required />
+  <!-- /#nickname -->
+  <input id="m"
+         autocomplete="off"
+         readonly
+         required />
+  <button>Send</button>
+</form>
+
+<!--suppress HtmlUnknownTarget -->
+<script src="/socket.io/socket.io.js"></script>
+<script src="//code.jquery.com/jquery-2.1.4.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/lodash.js/3.9.3/lodash.min.js"></script>
+<script>
+  $(window).ready(function () {
+    var $m = $('#m');
+    var $nickname = $('#nickname');
+    var $messages = $('#messages');
+    var $isTyping = $('#is-typing');
+    var socket = io();
+
+    var iAmTyping = false;
+    var isTypingList = [];
+
+    var appendMessages = function (data) {
+      var message;
+      if (typeof data.user !== 'undefined') {
+        message = data.user + ': ' + data.message;
+        $messages.append($('<li>').text(message));
+      } else {
+        $messages.append($('<li>').addClass('server-message').append($('<em>').text(data.message)));
+      }
+    };
+
+    var isTypingChange = function (data) {
+      console.log('index    ', 'data: ', data);
+      if ($nickname.val() !== data.user && typeof data.user !== 'undefined') {
+        if (data.typing) {
+          isTypingList = _.union(isTypingList, [data.user], false);
+          console.log('index    ', 'isTypingList: ', isTypingList);
+        } else {
+          _.pull(isTypingList, data.user);
+          console.log('index    ', 'isTypingList: ', isTypingList);
+
+        }
+
+        if (isTypingList.length) {
+          $isTyping.text(isTypingList.join(', ') + " is typing...");
+          $isTyping.show();
+        } else {
+          $isTyping.text('');
+          $isTyping.hide();
+        }
+
+      }
+    };
+
+    $('form').submit(function () {
+      if ($nickname.val() && $m.val()) {
+        var message = {
+          user: $nickname.val(),
+          message: $m.val()
+        };
+        socket.emit('CHAT_MESSAGE', message);
+        $m.val('');
+        message.date = Date.now();
+
+        appendMessages(message);
+
+        iAmTyping = false;
+
+      }
+      return false;
+    });
+
+    socket.on('CHAT_MESSAGE', function (data) {
+      if ($nickname.val() !== data.user) {
+        appendMessages(data);
+        data.typing = false;
+        isTypingChange(data);
+      }
+    });
+
+    socket.on('IS_TYPING', isTypingChange);
+
+    $nickname.on('input', function () {
+      $m.prop('readonly', !$nickname.val());
+    });
+
+    $m.on('input', function () {
+      if (iAmTyping === !$m.val()) {
+        iAmTyping = !!$m.val();
+        socket.emit('IS_TYPING', {
+          user: $nickname.val(),
+          typing: iAmTyping
+        });
+      }
+    });
+
+  });
+
+</script>
+</body>
+</html>
