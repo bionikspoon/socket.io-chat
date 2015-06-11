@@ -1,21 +1,35 @@
 {
-  "name": "socket-chat-example",
-  "version": "0.0.0",
-  "description": "Hello world socket.io app",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "name":            "socket.io-chat",
+  "version":         "0.0.0",
+  "description":     "Hello world socket.io app",
+  "main":            "index.js",
+  "scripts":         {
+    "start": "node index.js"
   },
-  "keywords": [
+  "keywords":        [
     "socket",
     "manu",
     "phatak",
-    "node"
+    "node",
+    "javascript"
   ],
-  "author": "Manu Phatak <bionikspoon@gmail.com>",
-  "license": "MIT",
-  "dependencies": {
-    "express": "^4.12.4",
+  "author":          "Manu Phatak <bionikspoon@gmail.com>",
+  "license":         "MIT",
+  "dependencies":    {
+    "express":   "^4.12.4",
     "socket.io": "^1.3.5"
-  }
+  },
+  "engines":         {
+    "node": "0.10.x",
+    "npm":  "2.11.x"
+  },
+  "devDependencies": { },
+  "repository":      {
+    "type": "git",
+    "url":  "git+https://github.com/bionikspoon/socket.io-chat.git"
+  },
+  "bugs":            {
+    "url": "https://github.com/bionikspoon/socket.io-chat/issues"
+  },
+  "homepage":        "https://github.com/bionikspoon/socket.io-chat#readme"
 }
